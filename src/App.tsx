@@ -1,22 +1,46 @@
 import JSZip from "jszip";
 import "./App.css";
-import { bitable } from "@lark-base-open/js-sdk";
-import { useState } from "react";
+import { FieldType, bitable } from "@lark-base-open/js-sdk";
+import { useEffect, useState } from "react";
 import classNames from "classnames";
+import { Select } from "@chakra-ui/react";
 
 export default function App() {
   const [loading, setLoading] = useState(false);
-  const [contentFieldName, setContentFieldName] = useState("prompt");
-  const exportCaption = async () => {
-    if (loading) return;
-    setLoading(true);
+  const [contentFieldName, setContentFieldName] = useState("");
+  const [contentFieldNameList, setContentFieldNameList] = useState<string[]>([]);
+
+  useEffect(() => {
+    initOptions();
+  }, []);
+
+  const initOptions = async () => {
     // Get the current selection
     const selection = await bitable.base.getSelection();
-    console.log("selection: ", selection);
     // Find current table by tableId
     if (!selection.tableId) return;
     const table = await bitable.base.getTableById(selection.tableId);
-    console.log("table: ", table);
+
+    // Get table's field meta list
+    const fieldMetaList = await table.getFieldMetaList();
+    console.log("fieldMetaList: ", fieldMetaList);
+    const textFields = fieldMetaList.filter((field) => field.type === FieldType.Text);
+    console.log("textFields: ", textFields);
+    const list = textFields.map((field) => field.name);
+    setContentFieldNameList(list);
+    setContentFieldName(list[0] ?? "");
+  };
+  const exportCaption = async () => {
+    if (loading) return;
+    if (!contentFieldName) {
+      return;
+    }
+    setLoading(true);
+    // Get the current selection
+    const selection = await bitable.base.getSelection();
+    // Find current table by tableId
+    if (!selection.tableId) return;
+    const table = await bitable.base.getTableById(selection.tableId);
 
     // Get table's field meta list
     const fieldMetaList = await table.getFieldMetaList();
@@ -94,9 +118,39 @@ export default function App() {
 
   return (
     <main>
-      <button className={classNames("export-btn", { loading: loading })} onClick={exportCaption}>
+      <label htmlFor="contentField">请选择导出字段</label>
+      {contentFieldNameList?.length ? (
+        <Select
+          id="contentField"
+          className="field-selector"
+          onChange={(e) => {
+            console.log("on select change", e);
+            setContentFieldName(e.target.value);
+          }}
+        >
+          {contentFieldNameList.map((item, i) => (
+            <option value={item} key={`${item}_${i}`}>
+              {item}
+            </option>
+          ))}
+        </Select>
+      ) : (
+        <p className="warning">当前表格没有可导出的文本字段</p>
+      )}
+      <p className="tip tiny">（选项中有英文翻译是系统自动的，不会影响导出字段本身）</p>
+
+      <button
+        className={classNames("export-btn", { loading: loading })}
+        onClick={exportCaption}
+        disabled={!contentFieldName}
+      >
         {loading ? "导出中..." : "导出"}
       </button>
+      {!contentFieldName ? (
+        <p className={classNames("warning", "tip")}>请选择一个文本字段</p>
+      ) : (
+        <p className="tip">当前导出字段：{contentFieldName}</p>
+      )}
     </main>
   );
 }
