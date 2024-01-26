@@ -28,8 +28,9 @@ export default function App() {
     console.log("textFields: ", textFields);
     const list = textFields.map((field) => field.name);
     setContentFieldNameList(list);
-    setContentFieldName(list[0] ?? "");
+    setContentFieldName((list.find(name => name === "prompt") || list[0])?? "");
   };
+  
   const exportCaption = async () => {
     if (loading) return;
     if (!contentFieldName) {
@@ -127,6 +128,7 @@ export default function App() {
             console.log("on select change", e);
             setContentFieldName(e.target.value);
           }}
+          value={contentFieldName}
         >
           {contentFieldNameList.map((item, i) => (
             <option value={item} key={`${item}_${i}`}>
@@ -137,8 +139,6 @@ export default function App() {
       ) : (
         <p className="warning">当前表格没有可导出的文本字段</p>
       )}
-      <p className="tip tiny">（选项中有英文翻译是系统自动的，不会影响导出字段本身）</p>
-
       <button
         className={classNames("export-btn", { loading: loading })}
         onClick={exportCaption}
