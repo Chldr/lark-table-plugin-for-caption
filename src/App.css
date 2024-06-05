@@ -32,7 +32,7 @@ main {
     }
   }
 
-  label {
+  :is(label) {
     font-weight: 500;
     font-size: 15px;
     margin-bottom: 6px;
