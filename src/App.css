@@ -26,7 +26,6 @@ main {
     cursor: pointer;
     text-align: center;
 
-
     &.loading {
       cursor: not-allowed;
       opacity: 0.4;
@@ -36,9 +35,21 @@ main {
   label {
     font-weight: 500;
     font-size: 15px;
+    margin-bottom: 6px;
+    display: block;
   }
   .field-selector {
     box-sizing: border-box;
+  }
+
+  .input {
+    margin-top: 20px;
+    height: 40px;
+    outline: none;
+    border: 1px solid;
+    border-color: #eee;
+    border-radius: 4px;
+    font-size: 14px;
   }
 
   .tip {

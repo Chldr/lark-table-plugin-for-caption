@@ -3,12 +3,13 @@ import "./App.css";
 import { FieldType, bitable } from "@lark-base-open/js-sdk";
 import { useEffect, useState } from "react";
 import classNames from "classnames";
-import { Select } from "@chakra-ui/react";
+import { Select, Input, Box } from "@chakra-ui/react";
 
 export default function App() {
   const [loading, setLoading] = useState(false);
   const [contentFieldName, setContentFieldName] = useState("");
   const [contentFieldNameList, setContentFieldNameList] = useState<string[]>([]);
+  const [fileType, setFileType] = useState("caption");
 
   useEffect(() => {
     initOptions();
@@ -28,9 +29,9 @@ export default function App() {
     console.log("textFields: ", textFields);
     const list = textFields.map((field) => field.name);
     setContentFieldNameList(list);
-    setContentFieldName((list.find(name => name === "prompt") || list[0])?? "");
+    setContentFieldName((list.find((name) => name === "prompt") || list[0]) ?? "");
   };
-  
+
   const exportCaption = async () => {
     if (loading) return;
     if (!contentFieldName) {
@@ -68,7 +69,7 @@ export default function App() {
         let fileName = "";
         let content = "";
         const id = await table.getCellString(idField.id, recordIdList[i]!);
-        fileName = `${id}.caption`;
+        fileName = `${id}.${fileType}`;
 
         const contentText = await table.getCellString(contentField.id, recordIdList[i]!);
         if (contentText) content = contentText;
@@ -119,26 +120,40 @@ export default function App() {
 
   return (
     <main>
-      <label htmlFor="contentField">请选择导出字段</label>
-      {contentFieldNameList?.length ? (
-        <Select
-          id="contentField"
-          className="field-selector"
+      <Box mb="20px">
+        <label htmlFor="contentField">请选择导出字段</label>
+        {contentFieldNameList?.length ? (
+          <Select
+            id="contentField"
+            className="field-selector"
+            onChange={(e) => {
+              console.log("on select change", e);
+              setContentFieldName(e.target.value);
+            }}
+            value={contentFieldName}
+          >
+            {contentFieldNameList.map((item, i) => (
+              <option value={item} key={`${item}_${i}`}>
+                {item}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          <p className="warning">当前表格没有可导出的文本字段</p>
+        )}
+      </Box>
+      <Box mb="20px">
+        <label htmlFor="contentField">请输入导出文件后缀（默认为 caption）</label>
+
+        <Input
+          value={fileType}
           onChange={(e) => {
-            console.log("on select change", e);
-            setContentFieldName(e.target.value);
+            setFileType(e.target.value);
           }}
-          value={contentFieldName}
-        >
-          {contentFieldNameList.map((item, i) => (
-            <option value={item} key={`${item}_${i}`}>
-              {item}
-            </option>
-          ))}
-        </Select>
-      ) : (
-        <p className="warning">当前表格没有可导出的文本字段</p>
-      )}
+          placeholder="请输入导出文件后缀（默认为 caption）"
+        />
+        <p className={classNames("tiny", "tip")}>比如：输入框内输入 caption，输出文件名则为 1.caption</p>
+      </Box>
       <button
         className={classNames("export-btn", { loading: loading })}
         onClick={exportCaption}
